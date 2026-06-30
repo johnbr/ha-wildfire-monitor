@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Wildfire Monitor",
+        "description": "Choose the area to monitor for active California wildfires. The map is centred on your Home Assistant home; drag the marker and adjust the radius to set how far out fires should be tracked.",
+        "data": {
+          "location": "Area to monitor"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "An area with these coordinates is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Wildfire Monitor options",
+        "description": "Tune when the close-to-home alert (binary_sensor.wildfire_alert) trips and how often CAL FIRE is polled.",
+        "data": {
+          "alert_distance_km": "Alert distance (km)",
+          "alert_min_acres": "Minimum fire size to alert on (acres)",
+          "scan_interval_min": "Update interval (minutes)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "wildfire_alert": {
+        "name": "Wildfire alert"
+      }
+    },
+    "sensor": {
+      "fires_in_range": {
+        "name": "Wildfires in range"
+      },
+      "nearest_distance": {
+        "name": "Nearest wildfire distance"
+      },
+      "largest_acres": {
+        "name": "Largest wildfire size"
+      }
+    }
+  }
+}

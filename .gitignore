@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+
+# Tooling caches
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+CLAUDE.md
+
+# Local virtualenvs
+.venv/
+venv/
+
+# JS dev tooling
+node_modules/

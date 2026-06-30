@@ -1,0 +1,14 @@
+{
+  "domain": "wildfire_monitor",
+  "name": "Wildfire Monitor",
+  "codeowners": [
+    "@johnbr"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/johnbr/ha-wildfire-monitor",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/johnbr/ha-wildfire-monitor/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

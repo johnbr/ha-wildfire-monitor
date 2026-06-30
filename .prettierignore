@@ -1,0 +1,5 @@
+# Files prettier should not reformat (HA-managed JSON keeps its own layout).
+custom_components/wildfire_monitor/translations/
+*.lock
+.git/
+__pycache__/
