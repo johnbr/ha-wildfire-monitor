@@ -65,9 +65,12 @@ class WildfireDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Fire]]):
 
     def __init__(self, hass: HomeAssistant, entry: WildfireConfigEntry) -> None:
         """Initialise the coordinator from the config entry."""
-        self._home_lat: float = entry.data[CONF_LATITUDE]
-        self._home_lon: float = entry.data[CONF_LONGITUDE]
-        self._monitoring_radius_km: float = entry.data[CONF_RADIUS]
+        # The configured location + radius define the AREA to monitor (which
+        # fires to track). Distances ("from home") are measured separately from
+        # the live HA home location — see _async_update_data.
+        self._area_lat: float = entry.data[CONF_LATITUDE]
+        self._area_lon: float = entry.data[CONF_LONGITUDE]
+        self._area_radius_km: float = entry.data[CONF_RADIUS]
 
         options = entry.options
         self._alert_distance_km: float = options.get(CONF_ALERT_DISTANCE, DEFAULT_ALERT_DISTANCE)
@@ -103,6 +106,11 @@ class WildfireDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Fire]]):
         if not isinstance(records, list):
             raise UpdateFailed("Unexpected CAL FIRE response (expected a list)")
 
+        # Home location is pulled live from HA so distances always reflect the
+        # current home, independent of the monitored area.
+        home_lat = self.hass.config.latitude
+        home_lon = self.hass.config.longitude
+
         fires: dict[str, Fire] = {}
         for record in records:
             if record.get("Type") != "Wildfire" or not record.get("IsActive"):
@@ -113,12 +121,14 @@ class WildfireDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Fire]]):
             if not uid or lat is None or lon is None:
                 continue
 
-            meters = location_distance(self._home_lat, self._home_lon, lat, lon)
-            if meters is None:
+            # Track the fire only if it falls inside the monitored area.
+            area_meters = location_distance(self._area_lat, self._area_lon, lat, lon)
+            if area_meters is None or area_meters / 1000 > self._area_radius_km:
                 continue
-            distance_km = round(meters / 1000, 1)
-            if distance_km > self._monitoring_radius_km:
-                continue
+
+            # The distance shown and alerted on is measured from the HA home.
+            home_meters = location_distance(home_lat, home_lon, lat, lon)
+            distance_km = round((home_meters if home_meters is not None else area_meters) / 1000, 1)
 
             fires[uid] = Fire(
                 uid=uid,

@@ -21,8 +21,10 @@ Data comes from CAL FIRE's keyless public API (no API key required). California 
    as an **Integration**.
 2. Install **Wildfire Monitor**, then restart Home Assistant.
 3. **Settings → Devices & Services → Add Integration → Wildfire Monitor**.
-4. The setup form is pre-centred on your HA home location — drag the marker and adjust
-   the radius to choose how far out fires should be tracked.
+4. The setup form is pre-centred on your HA home — drag the marker and radius to set the
+   **area to monitor** (which fires to track). You can cover a region far wider than home.
+   Distances and the close-to-home alert are always measured from your HA home location,
+   pulled live, **not** from this area's centre.
 
 Manual install: copy `custom_components/wildfire_monitor` into your HA `config/custom_components/`
 directory and restart.
@@ -37,13 +39,15 @@ directory and restart.
 | Minimum fire size (acres) | 0 | Ignore fires smaller than this for alerting. |
 | Update interval (minutes) | 10 | How often CAL FIRE is polled. |
 
-The monitoring radius (which fires are tracked at all) is set on the map during setup.
+The monitored area (centre + radius — which fires are tracked at all) is set on the map
+during setup. Distances and alerting are measured from your HA home, which is read live
+from Home Assistant and not stored in this integration.
 
 ## Entities
 
 | Entity | Description |
 | --- | --- |
-| `geo_location.*` | One marker per active fire near home (state = distance in km). Attributes: `acres`, `containment`, `county`, `location`, `started`, `updated`, `url`. |
+| `geo_location.*` | One marker per active fire in the monitored area (state = distance from home in km). Attributes: `acres`, `containment`, `county`, `location`, `started`, `updated`, `url`. |
 | `binary_sensor.wildfire_alert` | `on` when a fire is within the alert threshold. Attributes describe the nearest qualifying fire. |
 | `sensor.*_wildfires_in_range` | Count of tracked fires. |
 | `sensor.*_nearest_wildfire_distance` | Distance (km) to the closest fire. |

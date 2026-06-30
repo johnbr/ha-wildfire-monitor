@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Wildfire Monitor",
-        "description": "Choose the area to monitor for active California wildfires. The map is centred on your Home Assistant home; drag the marker and adjust the radius to set how far out fires should be tracked.",
+        "description": "Choose the area to monitor for active California wildfires — drag the marker and radius to cover the region you care about. The map starts centred on your Home Assistant home. Distances and the close-to-home alert are always measured from your HA home location, not this area's centre.",
         "data": {
           "location": "Area to monitor"
         }

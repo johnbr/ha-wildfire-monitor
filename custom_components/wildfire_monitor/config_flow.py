@@ -70,7 +70,7 @@ class WildfireConfigFlow(ConfigFlow, domain=DOMAIN):
             1,
         )
         return self.async_create_entry(
-            title=f"Wildfires near {latitude:.3f}, {longitude:.3f}",
+            title=f"Wildfires in area near {latitude:.3f}, {longitude:.3f}",
             data={
                 CONF_LATITUDE: latitude,
                 CONF_LONGITUDE: longitude,
