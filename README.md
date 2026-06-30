@@ -77,11 +77,11 @@ cards:
       {%- else -%}
       {% set ns = namespace(rows=[]) -%}
       {% for e in fires -%}
-      {% set ns.rows = ns.rows + [{'name': e.name, 'mi': (e.state | float(0)) * 0.621371, 'acres': e.attributes.acres | float(0), 'cont': e.attributes.containment, 'county': e.attributes.county, 'url': e.attributes.url}] -%}
+      {% set ns.rows = ns.rows + [{'name': e.name, 'mi': (e.state | float(0)) * 0.621371, 'acres': e.attributes.get('acres') | float(0), 'cont': e.attributes.get('containment'), 'county': e.attributes.get('county'), 'url': e.attributes.get('url')}] -%}
       {% endfor -%}
       {% set ns2 = namespace(lines=['| # | Fire | Dist | Acres | Cont. | County |', '|--:|:--|--:|--:|--:|:--|']) -%}
       {% for r in ns.rows | sort(attribute='mi') -%}
-      {% set ns2.lines = ns2.lines + ['| ' ~ loop.index ~ ' | [' ~ r.name ~ '](' ~ r.url ~ ') | ' ~ '%.1f'|format(r.mi) ~ ' mi | ' ~ '{:,.0f}'.format(r.acres) ~ ' | ' ~ ((r.cont|round|int|string ~ '%') if r.cont is not none else '—') ~ ' | ' ~ r.county ~ ' |'] -%}
+      {% set ns2.lines = ns2.lines + ['| ' ~ loop.index ~ ' | [' ~ r.name ~ '](' ~ (r.url or '#') ~ ') | ' ~ '%.1f'|format(r.mi) ~ ' mi | ' ~ '{:,.0f}'.format(r.acres) ~ ' | ' ~ ((r.cont|round|int|string ~ '%') if r.cont is not none else '—') ~ ' | ' ~ (r.county or '—') ~ ' |'] -%}
       {% endfor -%}
       {{ ns2.lines | join('\n') }}
       {%- endif %}
