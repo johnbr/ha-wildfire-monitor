@@ -17,3 +17,6 @@ jobs:
         uses: "hacs/action@main"
         with:
           category: "Integration"
+          # wildfire_monitor isn't in the home-assistant/brands repo yet; drop this
+          # ignore once it's accepted there (matching the sibling integrations).
+          ignore: "brands"
