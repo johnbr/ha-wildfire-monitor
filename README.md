@@ -53,6 +53,45 @@ from Home Assistant and not stored in this integration.
 | `sensor.*_nearest_wildfire_distance` | Distance (km) to the closest fire. |
 | `sensor.*_largest_wildfire_size` | Acreage of the largest tracked fire. |
 
+## Dashboard cards
+
+The fires are plain `geo_location` entities, so the built-in **Map** card plots them with no
+extra components, and a templated **Markdown** card gives a list sorted by distance from home.
+Paste this `vertical-stack` (Map on top, list below — or split them into separate cards):
+
+```yaml
+type: vertical-stack
+cards:
+  - type: map
+    auto_fit: true
+    entities:
+      - zone.home
+    geo_location_sources:
+      - wildfire_monitor
+  - type: markdown
+    title: Active wildfires
+    content: |
+      {% set fires = states.geo_location | selectattr('attributes.source', 'eq', 'wildfire_monitor') | list -%}
+      {% if fires | count == 0 -%}
+      _No active wildfires in the monitored area._
+      {%- else -%}
+      {% set ns = namespace(rows=[]) -%}
+      {% for e in fires -%}
+      {% set ns.rows = ns.rows + [{'name': e.name, 'mi': (e.state | float(0)) * 0.621371, 'acres': e.attributes.acres | float(0), 'cont': e.attributes.containment, 'county': e.attributes.county, 'url': e.attributes.url}] -%}
+      {% endfor -%}
+      {% set ns2 = namespace(lines=['| # | Fire | Dist | Acres | Cont. | County |', '|--:|:--|--:|--:|--:|:--|']) -%}
+      {% for r in ns.rows | sort(attribute='mi') -%}
+      {% set ns2.lines = ns2.lines + ['| ' ~ loop.index ~ ' | [' ~ r.name ~ '](' ~ r.url ~ ') | ' ~ '%.1f'|format(r.mi) ~ ' mi | ' ~ '{:,.0f}'.format(r.acres) ~ ' | ' ~ ((r.cont|round|int|string ~ '%') if r.cont is not none else '—') ~ ' | ' ~ r.county ~ ' |'] -%}
+      {% endfor -%}
+      {{ ns2.lines | join('\n') }}
+      {%- endif %}
+```
+
+Distances are shown in miles (the geo_location state is km; the `* 0.621371` converts it —
+drop that factor to show km). The Map auto-fits to all markers and home; with a wide monitored
+area it may zoom out across the state — set `auto_fit: false` and a `default_zoom:` to keep it
+near home.
+
 ## Example notification automation
 
 ```yaml
