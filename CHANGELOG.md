@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file. Versions are ma
 automatically by [release-please](https://github.com/googleapis/release-please) from
 Conventional Commit messages.
 
+## [0.2.1](https://github.com/johnbr/ha-wildfire-monitor/compare/v0.2.0...v0.2.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* get ready for the HACS default store ([#5](https://github.com/johnbr/ha-wildfire-monitor/issues/5)) ([7c876e5](https://github.com/johnbr/ha-wildfire-monitor/commit/7c876e53c45198a3e71bb7d8bb9f14eb533376aa))
+
 ## [0.2.0](https://github.com/johnbr/ha-wildfire-monitor/compare/v0.1.0...v0.2.0) (2026-06-30)
 
 
