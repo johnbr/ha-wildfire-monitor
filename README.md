@@ -9,25 +9,33 @@ Home Assistant:
   from home.
 - 📊 **Aggregate sensors** — number of fires in range, distance to the nearest fire,
   and the largest fire's acreage.
-- 🚨 **Close-to-home alert** — `binary_sensor.wildfire_alert` turns on when a fire is
-  within your alert distance (and optional minimum size), and a `wildfire_monitor_alert`
-  event is fired so you can send notifications from an automation.
+- 🚨 **Close-to-home alert** — a `wildfire_monitor_alert` event fires for each fire that
+  comes within your alert distance (and optional minimum size), so you can send
+  notifications from an automation, and the *Wildfire alert* binary sensor is on while
+  any fire qualifies.
 
 Data comes from CAL FIRE's keyless public API (no API key required). California only.
 
-## Installation (HACS)
+## Installation
 
-1. HACS → ⋮ → **Custom repositories** → add `https://github.com/johnbr/ha-wildfire-monitor`
-   as an **Integration**.
-2. Install **Wildfire Monitor**, then restart Home Assistant.
-3. **Settings → Devices & Services → Add Integration → Wildfire Monitor**.
-4. The setup form is pre-centred on your HA home — drag the marker and radius to set the
+[![Open this repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=johnbr&repository=ha-wildfire-monitor&category=integration)
+
+1. In HACS, search for **Wildfire Monitor**, download it (or use the button above), and
+   restart Home Assistant.
+2. **Settings → Devices & Services → Add Integration → Wildfire Monitor**.
+3. The setup form is pre-centred on your HA home — drag the marker and radius to set the
    **area to monitor** (which fires to track). You can cover a region far wider than home.
    Distances and the close-to-home alert are always measured from your HA home location,
    pulled live, **not** from this area's centre.
 
+If HACS doesn't list it yet, add it as a custom repository instead: HACS → **⋮** →
+**Custom repositories** → `https://github.com/johnbr/ha-wildfire-monitor`, category
+**Integration**, then continue from step 1.
+
 Manual install: copy `custom_components/wildfire_monitor` into your HA `config/custom_components/`
 directory and restart.
+
+Requires Home Assistant 2025.3 or later.
 
 ## Options
 
@@ -35,7 +43,7 @@ directory and restart.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| Alert distance (km) | 30 | A fire closer than this trips `binary_sensor.wildfire_alert`. |
+| Alert distance (km) | 30 | A fire closer than this fires the alert event and turns on the *Wildfire alert* binary sensor. |
 | Minimum fire size (acres) | 0 | Ignore fires smaller than this for alerting. |
 | Update interval (minutes) | 10 | How often CAL FIRE is polled. |
 
@@ -43,15 +51,22 @@ The monitored area (centre + radius — which fires are tracked at all) is set o
 during setup. Distances and alerting are measured from your HA home, which is read live
 from Home Assistant and not stored in this integration.
 
+The area can't be edited afterwards. To move or resize it, delete the integration entry
+and add it again. Delete first: a second entry for the same fires creates duplicate
+`geo_location` entities with a `_2` suffix.
+
 ## Entities
 
 | Entity | Description |
 | --- | --- |
 | `geo_location.*` | One marker per active fire in the monitored area (state = distance from home in km). Attributes: `acres`, `containment`, `county`, `location`, `started`, `updated`, `url`. |
-| `binary_sensor.wildfire_alert` | `on` when a fire is within the alert threshold. Attributes describe the nearest qualifying fire. |
-| `sensor.*_wildfires_in_range` | Count of tracked fires. |
-| `sensor.*_nearest_wildfire_distance` | Distance (km) to the closest fire. |
-| `sensor.*_largest_wildfire_size` | Acreage of the largest tracked fire. |
+| `binary_sensor.wildfire_monitor_wildfire_alert` | `on` while any fire is within the alert threshold. Attributes describe the nearest qualifying fire. |
+| `sensor.wildfire_monitor_wildfires_in_range` | Count of tracked fires. |
+| `sensor.wildfire_monitor_nearest_wildfire_distance` | Distance to the closest fire. |
+| `sensor.wildfire_monitor_largest_wildfire_size` | Acreage of the largest tracked fire. |
+
+The entity IDs above are the defaults; Home Assistant derives them from the device name,
+so they change if you rename the device.
 
 ## Dashboard cards
 
@@ -92,26 +107,53 @@ drop that factor to show km). The Map auto-fits to all markers and home; with a 
 area it may zoom out across the state — set `auto_fit: false` and a `default_zoom:` to keep it
 near home.
 
+## The alert event
+
+`wildfire_monitor_alert` fires once for each fire that newly meets the alert threshold:
+
+| Field | Meaning |
+| --- | --- |
+| `entry_id` | The config entry that raised it |
+| `name` | Fire name |
+| `distance_km` | Distance from your HA home, in km |
+| `acres` | Acres burned (may be `null`) |
+| `containment` | Percent contained (may be `null`) |
+| `county` | County |
+| `location` | CAL FIRE's location description |
+| `url` | CAL FIRE incident page |
+
+Which fires have already alerted is held in memory, so after a Home Assistant restart, or
+an options change (which reloads the entry), the first update fires the event again for
+every fire that still qualifies. That errs on the side of telling you twice rather than not
+at all; tag your notification with the fire's name, as below, so the repeat replaces the
+first one instead of buzzing again.
+
 ## Example notification automation
 
 ```yaml
 automation:
   - alias: "Notify on nearby wildfire"
-    trigger:
-      - platform: event
+    mode: queued
+    triggers:
+      - trigger: event
         event_type: wildfire_monitor_alert
-    action:
-      - service: notify.mobile_app_your_phone
+    actions:
+      - action: notify.mobile_app_your_phone
         data:
           title: "🔥 Wildfire near home"
           message: >-
             {{ trigger.event.data.name }} is {{ trigger.event.data.distance_km }} km away
             ({{ trigger.event.data.acres }} acres, {{ trigger.event.data.containment }}% contained).
           data:
+            tag: "wildfire-{{ trigger.event.data.name }}"
             url: "{{ trigger.event.data.url }}"
 ```
 
-You can equally trigger on `binary_sensor.wildfire_alert` turning `on`.
+Trigger on the event, not on the binary sensor. The sensor is a roll-up: it is already
+`on` while any fire qualifies, so a second fire crossing the threshold doesn't change its
+state and a state trigger stays silent in exactly the case that matters. Its `nearest_*`
+attributes also describe the nearest fire, which need not be the one that just crossed.
+`mode: queued` keeps two fires that cross in the same update from dropping one.
 
 ## Data source & attribution
 

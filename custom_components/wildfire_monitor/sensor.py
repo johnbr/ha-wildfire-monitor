@@ -66,6 +66,9 @@ SENSORS: tuple[WildfireSensorDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
+        # Converted to the user's unit system, which otherwise shows every
+        # digit of the conversion (32.4977133540126 mi).
+        suggested_display_precision=1,
         value_fn=lambda fires: nearest.distance_km if (nearest := _nearest(fires)) else None,
         attr_fn=lambda fires: _fire_attrs(_nearest(fires)),
     ),
@@ -75,6 +78,7 @@ SENSORS: tuple[WildfireSensorDescription, ...] = (
         icon="mdi:fire-alert",
         native_unit_of_measurement=UNIT_ACRES,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         value_fn=lambda fires: largest.acres if (largest := _largest(fires)) else None,
         attr_fn=lambda fires: _fire_attrs(_largest(fires)),
     ),
