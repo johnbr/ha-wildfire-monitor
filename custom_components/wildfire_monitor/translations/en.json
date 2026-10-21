@@ -17,7 +17,7 @@
     "step": {
       "init": {
         "title": "Wildfire Monitor options",
-        "description": "Tune when the close-to-home alert (binary_sensor.wildfire_alert) trips and how often CAL FIRE is polled.",
+        "description": "Tune when the Wildfire alert binary sensor and the wildfire_monitor_alert event trip, and how often CAL FIRE is polled.",
         "data": {
           "alert_distance_km": "Alert distance (km)",
           "alert_min_acres": "Minimum fire size to alert on (acres)",

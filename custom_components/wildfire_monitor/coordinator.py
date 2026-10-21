@@ -132,7 +132,7 @@ class WildfireDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Fire]]):
 
             fires[uid] = Fire(
                 uid=uid,
-                name=record.get("Name") or "Unknown fire",
+                name=(record.get("Name") or "").strip() or "Unknown fire",
                 latitude=lat,
                 longitude=lon,
                 distance_km=distance_km,
